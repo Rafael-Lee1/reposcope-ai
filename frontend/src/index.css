@@ -1,0 +1,577 @@
+/* ==========================================================================
+   RepoScope AI — design tokens, reset, base typography and animation system
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* Canvas and elevated surfaces */
+  --bg: #08090c;
+  --surface-1: #0e1015;
+  --surface-2: #14171e;
+  --surface-3: #1c202a;
+
+  /* Hairlines — used sparingly instead of boxing everything */
+  --border-faint: rgba(255, 255, 255, 0.055);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Text hierarchy */
+  --text: #f1f3f7;
+  --text-secondary: #a3abba;
+  --text-tertiary: #6e7686;
+
+  /* Accent */
+  --accent: #6d8bff;
+  --accent-strong: #93a8ff;
+  --accent-soft: rgba(109, 139, 255, 0.12);
+
+  /* Semantic tones */
+  --success: #3ecf8e;
+  --warning: #e0a33c;
+  --danger: #ef6a75;
+  --info: #5c9fe8;
+  --neutral: #8b93a3;
+
+  /* ---- Motion system -----------------------------------------------------
+     One vocabulary for the whole product:
+       instant  – press feedback
+       fast     – hover / focus feedback
+       base     – element entrances, progress growth
+       slow     – section reveals
+       draw     – the technical score gauge
+       ambient  – decorative background, deliberately near-imperceptible
+     ---------------------------------------------------------------------- */
+  --dur-instant: 90ms;
+  --dur-fast: 160ms;
+  --dur-base: 260ms;
+  --dur-slow: 440ms;
+  --dur-draw: 1100ms;
+  --dur-ambient: 46s;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Entrance distance and stagger cadence for progressive reveals. */
+  --reveal-distance: 16px;
+  --stagger-step: 65ms;
+  --stagger-base: 90ms;
+
+  /* Shape */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 24px 48px -32px rgba(0, 0, 0, 0.9);
+  --shadow-lift: 0 18px 36px -22px rgba(0, 0, 0, 0.85);
+
+  /* Layered surface treatment.
+     `--wash` lifts the top of a large surface so it does not read as a flat
+     fill; `--relief` draws a one-pixel lit top edge. Both are near-imperceptible
+     on their own — together they give the surface physical depth without any
+     gradient being visible as a gradient. Hover states must re-declare
+     `--relief`, because `box-shadow` does not accumulate. */
+  --wash: linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent 46%);
+  --relief: inset 0 1px 0 rgba(255, 255, 255, 0.038);
+
+  /* Layout */
+  --content-width: 1120px;
+  --gutter: clamp(1rem, 4vw, 2rem);
+  --gap: clamp(1rem, 2.2vw, 1.5rem);
+
+  /* Type */
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", "JetBrains Mono", SFMono-Regular, Menlo, Consolas,
+    monospace;
+}
+
+/*
+ * Single tone contract: set `data-tone` on an element and use `var(--tone)`
+ * inside it. Replaces per-component colour modifier classes.
+ */
+[data-tone="accent"] {
+  --tone: var(--accent);
+}
+[data-tone="success"] {
+  --tone: var(--success);
+}
+[data-tone="warning"] {
+  --tone: var(--warning);
+}
+[data-tone="danger"] {
+  --tone: var(--danger);
+}
+[data-tone="info"] {
+  --tone: var(--info);
+}
+[data-tone="neutral"] {
+  --tone: var(--neutral);
+}
+
+/* --------------------------------------------------------------------------
+   Keyframes
+   -------------------------------------------------------------------------- */
+
+/* Progressive reveal */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-distance), 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reveal-left {
+  from {
+    opacity: 0;
+    transform: translate3d(calc(var(--reveal-distance) * -1), 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes reveal-right {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--reveal-distance), 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Technical score gauge draws itself in from zero. */
+@keyframes radial-draw {
+  from {
+    stroke-dashoffset: var(--circumference);
+  }
+}
+
+/* Progress bars grow from the left edge. */
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-opacity {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Live status dot: a soft breathing ring, never a flash. */
+@keyframes ping {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  70%,
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+/* Ambient background */
+@keyframes grid-drift {
+  to {
+    transform: translate3d(-56px, -56px, 0);
+  }
+}
+
+@keyframes orb-drift-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(6%, 5%, 0) scale(1.1);
+  }
+}
+
+@keyframes orb-drift-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  50% {
+    transform: translate3d(-7%, -4%, 0) scale(1);
+  }
+}
+
+@keyframes scan-sweep {
+  0% {
+    transform: translate3d(0, -8vh, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.55;
+  }
+  88% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate3d(0, 108vh, 0);
+    opacity: 0;
+  }
+}
+
+/* Sweeping highlight used by the search beam and button sheen. */
+@keyframes sweep-x {
+  from {
+    transform: translate3d(-140%, 0, 0);
+  }
+  to {
+    transform: translate3d(240%, 0, 0);
+  }
+}
+
+/* Analysis pipeline: an indeterminate signal travelling the rail. */
+@keyframes rail-scan {
+  from {
+    transform: translate3d(-30%, 0, 0);
+  }
+  to {
+    transform: translate3d(340%, 0, 0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Reset
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+dl,
+dd {
+  margin: 0;
+}
+
+a {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: rgba(109, 139, 255, 0.3);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Ambient background
+   Rendered with transform/opacity only so it stays on the compositor.
+   -------------------------------------------------------------------------- */
+
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-image: radial-gradient(
+    1000px 560px at 50% -18%,
+    rgba(109, 139, 255, 0.1),
+    transparent 65%
+  );
+  background-repeat: no-repeat;
+}
+
+.bg__grid {
+  position: absolute;
+  inset: -60%;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 68% 52% at 50% 26%,
+    #000 18%,
+    transparent 76%
+  );
+  mask-image: radial-gradient(
+    ellipse 68% 52% at 50% 26%,
+    #000 18%,
+    transparent 76%
+  );
+  animation: grid-drift var(--dur-ambient) linear infinite;
+}
+
+.bg__orb {
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* Soft edges come from the gradient itself — no blur filter (cheaper). */
+.bg__orb--one {
+  top: -24%;
+  left: -10%;
+  width: min(58vw, 760px);
+  aspect-ratio: 1;
+  background: radial-gradient(closest-side, rgba(109, 139, 255, 0.26), transparent);
+  animation: orb-drift-a 52s var(--ease-in-out) infinite;
+}
+
+.bg__orb--two {
+  right: -12%;
+  bottom: -30%;
+  width: min(52vw, 660px);
+  aspect-ratio: 1;
+  background: radial-gradient(closest-side, rgba(62, 207, 142, 0.13), transparent);
+  animation: orb-drift-b 68s var(--ease-in-out) infinite;
+}
+
+.bg__scan {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(109, 139, 255, 0.4),
+    transparent
+  );
+  animation: scan-sweep 18s linear infinite;
+}
+
+.bg__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 92% 72% at 50% 40%,
+    transparent 42%,
+    rgba(5, 6, 9, 0.72) 100%
+  );
+}
+
+/*
+ * Cursor-responsive ambience.
+ *
+ * A single fixed layer translated by transform only — the gradient itself never
+ * repaints, so following the pointer stays on the compositor. Intensity is
+ * deliberately below the threshold of notice: it should register as depth, not
+ * as an effect. Inert until `usePointerGlow` marks it active, which happens
+ * only for fine pointers without a reduced-motion preference.
+ */
+.glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: min(52vw, 640px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    rgba(109, 139, 255, 0.085),
+    transparent
+  );
+  transform: translate3d(
+    calc(var(--glow-x, 50vw) - 50%),
+    calc(var(--glow-y, 50vh) - 50%),
+    0
+  );
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+.glow[data-active="true"] {
+  opacity: 1;
+  will-change: transform;
+}
+
+/* --------------------------------------------------------------------------
+   Progressive reveal utility
+   -------------------------------------------------------------------------- */
+
+[data-reveal="hidden"] {
+  opacity: 0;
+}
+
+[data-reveal="visible"] {
+  animation: reveal-up var(--dur-slow) var(--ease-out) backwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal="visible"][data-reveal-from="left"] {
+  animation-name: reveal-left;
+}
+
+[data-reveal="visible"][data-reveal-from="right"] {
+  animation-name: reveal-right;
+}
+
+/*
+ * Staggered children. Every element that carries a `--stagger-index` shares
+ * this cadence, which keeps sequences consistent across sections.
+ *
+ * `backwards` (not `both`) is deliberate: a finished entrance animation must
+ * stop contributing to the cascade, otherwise its `transform` would outrank
+ * the `:hover` transform of the same element and silently disable it.
+ */
+.signal,
+.stack__pill,
+.insight,
+.summary__meta-item,
+.stage {
+  animation: reveal-up var(--dur-base) var(--ease-out) backwards;
+  animation-delay: calc(
+    var(--stagger-index, 0) * var(--stagger-step) + var(--stagger-base)
+  );
+}
+
+/* --------------------------------------------------------------------------
+   Shared utilities
+   -------------------------------------------------------------------------- */
+
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: -9999px;
+  z-index: 10;
+  padding: 0.6rem 1rem;
+  border-radius: 0 0 var(--radius) 0;
+  background: var(--accent);
+  color: #08090c;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+.muted {
+  color: var(--text-tertiary);
+  font-size: 0.9375rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion
+   Motion is decorative here, so it is neutralised rather than reworked.
+   Entrance animations jump straight to their final state, and the ambient
+   layers stop entirely.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .bg__grid,
+  .bg__orb,
+  .bg__scan {
+    animation: none !important;
+  }
+
+  /* The pointer glow is pointer-driven motion, so it is removed outright.
+     `usePointerGlow` already refuses to activate it; this is the CSS guarantee
+     that holds even before hydration. */
+  .glow {
+    display: none;
+  }
+
+  [data-reveal="hidden"] {
+    opacity: 1;
+  }
+}
