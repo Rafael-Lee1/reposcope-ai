@@ -1,3 +1,6 @@
+import logging
+import os
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -5,6 +8,8 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+
+logger = logging.getLogger("reposcope")
 
 app = FastAPI(
     title="RepoScope AI API",
@@ -15,13 +20,35 @@ app = FastAPI(
     version="1.1.0",
 )
 
+# Browser origins allowed to call this API, comma-separated.
+#
+# ALLOWED_ORIGINS=http://localhost:5173
+#
+# The fallback is the local Vite dev server rather than "*", so a deployment
+# that forgets to set the variable fails closed instead of exposing the API to
+# every origin.
+DEFAULT_ALLOWED_ORIGINS = "http://localhost:5173"
+
+
+def get_allowed_origins() -> list[str]:
+    raw_origins = os.getenv(
+        "ALLOWED_ORIGINS",
+        DEFAULT_ALLOWED_ORIGINS,
+    )
+
+    return [
+        origin.strip()
+        for origin in raw_origins.split(",")
+        if origin.strip()
+    ]
+
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=get_allowed_origins(),
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET"],
+    allow_headers=["Accept", "Content-Type"],
 )
 
 
@@ -55,6 +82,42 @@ def calculate_days_since(date_string: str | None) -> int | None:
         0,
         (now - date_value).days,
     )
+
+
+# GitHub owner names allow letters, digits and hyphens (up to 39 characters,
+# and cannot start or end with a hyphen). Repository names additionally allow
+# dots and underscores (up to 100 characters).
+OWNER_PATTERN = re.compile(
+    r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$"
+)
+
+REPOSITORY_PATTERN = re.compile(
+    r"^[A-Za-z0-9._-]{1,100}$"
+)
+
+
+def validate_identifier(
+    value: str,
+    pattern: re.Pattern[str],
+    field_name: str,
+) -> str:
+    """
+    Accepts only a plain GitHub owner or repository name.
+
+    Anything else — empty values, whitespace, extra slashes, "../" sequences,
+    encoded separators or a full URL — is rejected with HTTP 400 before any
+    upstream request is built.
+    """
+
+    candidate = value.strip()
+
+    if not candidate or not pattern.match(candidate):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid {field_name}.",
+        )
+
+    return candidate
 
 
 def detect_stack(
@@ -315,6 +378,20 @@ async def analyze_repository(
     repo: str,
 ):
 
+    owner = validate_identifier(
+        owner,
+        OWNER_PATTERN,
+        "owner",
+    )
+
+    repo = validate_identifier(
+        repo,
+        REPOSITORY_PATTERN,
+        "repository name",
+    )
+
+    # Fixed upstream host. Only the validated path segments are interpolated,
+    # so no user input can redirect the request to another host.
     url = f"https://api.github.com/repos/{owner}/{repo}"
 
     headers = {
@@ -332,14 +409,19 @@ async def analyze_repository(
                 headers=headers,
             )
 
-    except httpx.RequestError as error:
+    except httpx.RequestError:
+
+        # The technical detail stays in the server log; the client receives a
+        # stable message that reveals nothing about the network internals.
+        logger.exception(
+            "GitHub request failed for %s/%s",
+            owner,
+            repo,
+        )
 
         raise HTTPException(
             status_code=503,
-            detail=(
-                f"Unable to connect to GitHub API: "
-                f"{str(error)}"
-            ),
+            detail="Unable to connect to GitHub API.",
         )
 
     if response.status_code == 404:
