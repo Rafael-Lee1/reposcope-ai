@@ -9,13 +9,7 @@ metadados públicos do repositório.
 
 ## Preview
 
-<<<<<<< HEAD
-
 ![Tela inicial do RepoScope AI](docs/images/reposcope-home.png)
-
-=======
-![Tela inicial do RepoScope AI](docs/images/reposcope-home.png)
->>>>>>> 18af840 (docs: fix application preview)
 
 ---
 
