@@ -297,4 +297,3 @@ Full Stack Developer
 
 - GitHub: [Rafael-Lee1](https://github.com/Rafael-Lee1)
 - Repositório: [Rafael-Lee1/reposcope-ai](https://github.com/Rafael-Lee1/reposcope-ai)
-
