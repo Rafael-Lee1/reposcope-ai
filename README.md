@@ -9,15 +9,9 @@ metadados públicos do repositório.
 
 ## Preview
 
-As capturas de tela serão adicionadas em `docs/images/`. Enquanto isso, o
-projeto pode ser executado localmente seguindo as instruções abaixo.
 
-Para publicar o screenshot principal, salve a imagem em
-`docs/images/reposcope-home.png` e remova o comentário do bloco a seguir:
-
-<!--
 ![Tela inicial do RepoScope AI](docs/images/reposcope-home.png)
--->
+
 
 ---
 
